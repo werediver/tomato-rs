@@ -11,6 +11,8 @@ imgui-glow-renderer = { git = "https://github.com/imgui-rs/imgui-rs", tag = "v0.
 imgui-sdl2-support = { git = "https://github.com/imgui-rs/imgui-rs", tag = "v0.9.0" }
 sdl2 = "0.34.5"
 
+conf = { path = "../lib/conf" }
+
 [[bin]]
 name = "tomato"
 path = "src/main.rs"
