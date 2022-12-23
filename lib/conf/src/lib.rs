@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,30 +32,32 @@ mod default {
     pub fn timers() -> Vec<Timer> {
         vec![
             Timer {
-                name: "Work".to_owned(),
+                label: "Work".to_owned(),
                 duration: 25,
             },
             Timer {
-                name: "Br".to_owned(),
+                label: "Br".to_owned(),
                 duration: 5,
             },
             Timer {
-                name: "Break".to_owned(),
+                label: "Break".to_owned(),
                 duration: 15,
             },
         ]
     }
 }
 
-impl Conf {
-    pub fn from_str(s: impl AsRef<str>) -> Result<Conf, toml::de::Error> {
-        toml::from_str(s.as_ref())
+impl FromStr for Conf {
+    type Err = toml::de::Error;
+
+    fn from_str(s: &str) -> Result<Conf, Self::Err> {
+        toml::from_str(s)
     }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Timer {
-    pub name: String,
+    pub label: String,
     /// Duration in minutes.
     pub duration: u32,
 }

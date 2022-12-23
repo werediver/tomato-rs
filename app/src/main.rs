@@ -1,5 +1,7 @@
 use std::fs::read_to_string;
 use std::io;
+use std::str::FromStr;
+use std::time::Duration;
 
 use glow::HasContext;
 use imgui::sys::ImVec2;
@@ -16,6 +18,7 @@ use sdl2::{
 };
 
 use conf::Conf;
+use core::{app_state::AppState, timer};
 
 fn glow_context(window: &Window) -> glow::Context {
     unsafe {
@@ -25,13 +28,23 @@ fn glow_context(window: &Window) -> glow::Context {
 
 fn load_conf() -> io::Result<Conf> {
     let data = read_to_string("tomato.toml")?;
-    let conf = Conf::from_str(data).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let conf =
+        Conf::from_str(data.as_ref()).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
     Ok(conf)
 }
 
 fn main() {
     let conf = load_conf().unwrap();
+    let mut app_state = AppState {
+        timers: conf
+            .timers
+            .into_iter()
+            .map(|t| {
+                core::timer::Timer::new(t.label, Duration::from_secs_f32(t.duration as f32 * 60.0))
+            })
+            .collect::<Vec<_>>(),
+    };
 
     let sdl = sdl2::init().unwrap();
     let sdl_video = sdl.video().unwrap();
@@ -69,8 +82,8 @@ fn main() {
 
     let window_padding: ImVec2 = imgui.style().window_padding.into();
     let item_spacing: ImVec2 = imgui.style().item_spacing.into();
-    let window_height = conf.bar_height as f32 * conf.timers.len() as f32
-        + item_spacing.y * (conf.timers.len() - 1) as f32
+    let window_height = conf.bar_height as f32 * app_state.timers.len() as f32
+        + item_spacing.y * (app_state.timers.len() - 1) as f32
         + window_padding.y * 2.0;
 
     window
@@ -102,11 +115,43 @@ fn main() {
                 Condition::FirstUseEver,
             )
             .build(|| {
-                for t in &conf.timers {
-                    ProgressBar::new(t.duration as f32 / 30.0)
-                        .size([-1.0, conf.bar_height as f32])
-                        .overlay_text(&t.name)
-                        .build(&ui);
+                for i in 0..app_state.timers.len() {
+                    let t = &mut app_state.timers[i];
+
+                    let t_id = ui.push_id_usize(i);
+
+                    ProgressBar::new(t.elapsed_frac())
+                        .size([conf.window_width as f32 - 62.0, conf.bar_height as f32])
+                        .overlay_text(t.label())
+                        .build(ui);
+
+                    ui.same_line();
+                    match t.state() {
+                        timer::State::Stopped => {
+                            if ui.button(">") {
+                                t.start()
+                            }
+                        }
+                        timer::State::Started => {
+                            if ui.button("_") {
+                                t.pause();
+                            }
+                        }
+                        timer::State::Paused => {
+                            if ui.button(">") {
+                                t.resume();
+                            }
+                        }
+                    }
+
+                    ui.same_line();
+                    ui.disabled(t.state() == timer::State::Stopped, || {
+                        if ui.button("X") {
+                            t.stop();
+                        }
+                    });
+
+                    t_id.end();
                 }
             });
 
