@@ -2,9 +2,47 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conf {
-    pub title: Option<String>,
-    #[serde(rename = "timer")]
+    #[serde(default = "default::title")]
+    pub title: String,
+    #[serde(default = "default::window_width")]
+    pub window_width: u32,
+    #[serde(default = "default::bar_height")]
+    pub bar_height: u32,
+    #[serde(default = "default::timers")]
     pub timers: Vec<Timer>,
+}
+
+mod default {
+    use super::Timer;
+
+    pub fn title() -> String {
+        "🍅 Tomato".to_owned()
+    }
+
+    pub fn window_width() -> u32 {
+        320
+    }
+
+    pub fn bar_height() -> u32 {
+        20
+    }
+
+    pub fn timers() -> Vec<Timer> {
+        vec![
+            Timer {
+                name: "Work".to_owned(),
+                duration: 25,
+            },
+            Timer {
+                name: "Br".to_owned(),
+                duration: 5,
+            },
+            Timer {
+                name: "Break".to_owned(),
+                duration: 15,
+            },
+        ]
+    }
 }
 
 impl Conf {
@@ -17,5 +55,5 @@ impl Conf {
 pub struct Timer {
     pub name: String,
     /// Duration in minutes.
-    pub duration: i32,
+    pub duration: u32,
 }

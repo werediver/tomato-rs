@@ -42,15 +42,10 @@ fn main() {
     gl_attr.set_context_profile(GLProfile::Core);
 
     let mut window = sdl_video
-        .window(
-            conf.title.unwrap_or("🍅 Tomato".to_owned()).as_ref(),
-            320,
-            240,
-        )
+        .window(&conf.title, conf.window_width, 240)
         .allow_highdpi()
         .opengl()
         .position_centered()
-        .resizable()
         .build()
         .unwrap();
 
@@ -74,14 +69,12 @@ fn main() {
 
     let window_padding: ImVec2 = imgui.style().window_padding.into();
     let item_spacing: ImVec2 = imgui.style().item_spacing.into();
-    let (w, _) = window.size();
+    let window_height = conf.bar_height as f32 * conf.timers.len() as f32
+        + item_spacing.y * (conf.timers.len() - 1) as f32
+        + window_padding.y * 2.0;
+
     window
-        .set_size(
-            w,
-            (20.0 * conf.timers.len() as f32
-                + item_spacing.y * (conf.timers.len() - 1) as f32
-                + window_padding.y * 2.0) as u32,
-        )
+        .set_size(conf.window_width, window_height as u32)
         .unwrap();
 
     let mut platform = SdlPlatform::init(&mut imgui);
@@ -101,15 +94,17 @@ fn main() {
 
         let ui = imgui.new_frame();
 
-        let (w, h) = window.size();
-        ui.window("Tomato")
+        ui.window(&conf.title)
             .no_decoration()
             .position([0.0, 0.0], Condition::Always)
-            .size([w as f32, h as f32], Condition::Always)
+            .size(
+                [conf.window_width as f32, window_height],
+                Condition::FirstUseEver,
+            )
             .build(|| {
                 for t in &conf.timers {
                     ProgressBar::new(t.duration as f32 / 30.0)
-                        .size([-1.0, 20.0])
+                        .size([-1.0, conf.bar_height as f32])
                         .overlay_text(&t.name)
                         .build(&ui);
                 }
