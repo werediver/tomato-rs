@@ -11,6 +11,7 @@ use imgui::ProgressBar;
 use imgui_glow_renderer::glow;
 use imgui_glow_renderer::AutoRenderer;
 use imgui_sdl2_support::SdlPlatform;
+use sdl2::sys::SDL_WindowFlags;
 use sdl2::video::SwapInterval;
 use sdl2::{
     event::Event,
@@ -56,6 +57,7 @@ fn main() {
 
     let mut window = sdl_video
         .window(&conf.title, conf.window_width, 240)
+        .set_window_flags(SDL_WindowFlags::SDL_WINDOW_ALWAYS_ON_TOP as u32)
         .allow_highdpi()
         .opengl()
         .position_centered()
