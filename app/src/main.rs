@@ -1,4 +1,5 @@
-use core::action::{Action, TimerId, TimerOp};
+use core::action::Action;
+use core::handle_action::handle_action;
 use std::fs::read_to_string;
 use std::io;
 use std::str::FromStr;
@@ -39,20 +40,11 @@ fn main() {
     'main: loop {
         let actions = gui.update(&conf, &app_state);
         for action in actions {
-            match action {
-                Action::TimerAction {
-                    id: TimerId(idx),
-                    op,
-                } => {
-                    let timer = &mut app_state.timers[idx];
-                    match op {
-                        TimerOp::Start => timer.start(),
-                        TimerOp::Pause => timer.pause(),
-                        TimerOp::Resume => timer.resume(),
-                        TimerOp::Stop => timer.stop(),
-                    }
+            if let Some(action) = handle_action(action, &mut app_state) {
+                match action {
+                    Action::Quit => break 'main,
+                    _ => {}
                 }
-                Action::Quit => break 'main,
             }
         }
     }
