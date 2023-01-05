@@ -5,12 +5,13 @@ use conf::Conf;
 use core::{
     action::{Action, TimerId, TimerOp},
     state::State,
-    timer,
+    timer, Core,
 };
 use sdl2::{
     sys::SDL_WindowFlags,
     video::{GLProfile, SwapInterval},
 };
+use std::{iter::once, time::Instant};
 
 pub struct Gui {
     _gl_context: sdl2::video::GLContext,
@@ -23,6 +24,22 @@ pub struct Gui {
 }
 
 impl Gui {
+    pub fn run(conf: Conf, mut core: Core) {
+        let mut gui = Self::new(&conf, core.state());
+
+        'main: loop {
+            let actions = gui.update(&conf, core.state());
+            for action in actions {
+                if let Some(action) = core.handle(action) {
+                    match action {
+                        Action::Quit => break 'main,
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
     pub fn new(conf: &Conf, state: &State) -> Self {
         let sdl = sdl2::init().unwrap();
         let sdl_video = sdl.video().unwrap();
@@ -109,6 +126,8 @@ impl Gui {
                 imgui::Condition::Once,
             )
             .build(|| {
+                let now = Instant::now();
+
                 state
                     .timers
                     .iter()
@@ -116,14 +135,14 @@ impl Gui {
                     .flat_map(|(i, t)| {
                         let t_id = ui.push_id_usize(i);
 
-                        ProgressBar::new(t.elapsed_frac())
+                        ProgressBar::new(t.elapsed_frac(now))
                             .size([conf.window_width as f32 - 62.0, conf.bar_height as f32])
                             .overlay_text(t.label())
                             .build(ui);
 
                         ui.same_line();
                         let action1 = match t.state() {
-                            timer::State::Stopped => {
+                            timer::State::Reset | timer::State::Stopped => {
                                 ui.button(">").then_some(Action::TimerAction {
                                     id: TimerId(i),
                                     op: TimerOp::Start,
@@ -137,12 +156,12 @@ impl Gui {
                             }
                             timer::State::Paused => ui.button(">").then_some(Action::TimerAction {
                                 id: TimerId(i),
-                                op: TimerOp::Start,
+                                op: TimerOp::Resume,
                             }),
                         };
 
                         ui.same_line();
-                        let disabled = ui.begin_disabled(t.state() == timer::State::Stopped);
+                        let disabled = ui.begin_disabled(t.state() == timer::State::Reset);
                         let action2 = ui.button("X").then_some(Action::TimerAction {
                             id: TimerId(i),
                             op: TimerOp::Stop,
@@ -157,8 +176,6 @@ impl Gui {
             })
             .unwrap_or_default();
 
-        // ui.show_demo_window(true);
-
         let draw_data = self.imgui.render();
 
         unsafe { self.renderer.gl_context().clear(glow::COLOR_BUFFER_BIT) };
@@ -167,6 +184,9 @@ impl Gui {
         self.window.gl_swap_window();
 
         actions
+            .into_iter()
+            .chain(once(Action::Tick))
+            .collect::<Vec<_>>()
     }
 }
 

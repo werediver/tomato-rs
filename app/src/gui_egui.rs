@@ -20,7 +20,7 @@ impl Gui {
 
         let options = eframe::NativeOptions {
             always_on_top: true,
-            // decorated: false,
+            decorated: false,
             centered: true,
             initial_window_size: Some(egui::vec2(this.conf.window_width as f32, 240.0)),
             run_and_return: true,
@@ -35,7 +35,7 @@ impl Gui {
 }
 
 impl eframe::App for Gui {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             let actions = self
                 .core
@@ -103,10 +103,16 @@ impl eframe::App for Gui {
             }
 
             let cursor = ui.cursor();
-            _frame.set_window_size(egui::vec2(
+            frame.set_window_size(egui::vec2(
                 self.conf.window_width as f32,
                 cursor.top() + ui.spacing().window_margin.bottom,
             ));
+
+            // Extra checks may be added here (hold-off time, drag distance threshold),
+            // but seems to work just fine as is.
+            if ui.input().pointer.primary_down() {
+                frame.drag_window();
+            }
 
             ctx.request_repaint_after(Duration::new(0, 100_000_000));
         });

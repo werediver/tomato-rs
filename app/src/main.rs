@@ -4,11 +4,13 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use conf::Conf;
-use core::{action::Action, state::State, Core};
+use core::{state::State, Core};
 
+mod gui_egui;
 mod gui_imgui;
-use gui_imgui as gui;
 
+// use gui_imgui as gui;
+use gui_egui as gui;
 
 use gui::Gui;
 
@@ -34,19 +36,7 @@ fn main() {
             })
             .collect::<Vec<_>>(),
     };
-    let mut core = Core::new(state);
+    let core = Core::new(state);
 
-    let mut gui = Gui::new(&conf, core.state());
-
-    'main: loop {
-        let actions = gui.update(&conf, core.state());
-        for action in actions {
-            if let Some(action) = core.handle(action) {
-                match action {
-                    Action::Quit => break 'main,
-                    _ => {}
-                }
-            }
-        }
-    }
+    Gui::run(conf, core);
 }
