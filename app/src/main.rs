@@ -1,14 +1,18 @@
-use core::action::Action;
-use core::handle_action::handle_action;
 use std::fs::read_to_string;
 use std::io;
 use std::str::FromStr;
 use std::time::Duration;
 
 use conf::Conf;
-use core::app_state::AppState;
+use core::{
+    action::{Action, TimerId, TimerOp},
+    state::State,
+    timer, Core,
+};
 
-mod gui;
+mod gui_imgui;
+use gui_imgui as gui;
+
 
 use gui::Gui;
 
@@ -22,7 +26,7 @@ fn load_conf() -> io::Result<Conf> {
 
 fn main() {
     let conf = load_conf().unwrap();
-    let mut app_state = AppState {
+    let state = State {
         timers: conf
             .timers
             .iter()
@@ -34,13 +38,14 @@ fn main() {
             })
             .collect::<Vec<_>>(),
     };
+    let mut core = Core::new(state);
 
-    let mut gui = Gui::new(&conf, &app_state);
+    let mut gui = Gui::new(&conf, core.state());
 
     'main: loop {
-        let actions = gui.update(&conf, &app_state);
+        let actions = gui.update(&conf, core.state());
         for action in actions {
-            if let Some(action) = handle_action(action, &mut app_state) {
+            if let Some(action) = core.handle(action) {
                 match action {
                     Action::Quit => break 'main,
                     _ => {}

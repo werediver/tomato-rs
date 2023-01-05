@@ -4,7 +4,7 @@ use imgui_glow_renderer::glow::{self, HasContext};
 use conf::Conf;
 use core::{
     action::{Action, TimerId, TimerOp},
-    app_state::AppState,
+    state::State,
     timer,
 };
 use sdl2::{
@@ -23,7 +23,7 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(conf: &Conf, app_state: &AppState) -> Self {
+    pub fn new(conf: &Conf, state: &State) -> Self {
         let sdl = sdl2::init().unwrap();
         let sdl_video = sdl.video().unwrap();
 
@@ -63,8 +63,8 @@ impl Gui {
 
         let window_padding: ImVec2 = imgui.style().window_padding.into();
         let item_spacing: ImVec2 = imgui.style().item_spacing.into();
-        let window_height = conf.bar_height as f32 * app_state.timers.len() as f32
-            + item_spacing.y * (app_state.timers.len() - 1) as f32
+        let window_height = conf.bar_height as f32 * state.timers.len() as f32
+            + item_spacing.y * (state.timers.len() - 1) as f32
             + window_padding.y * 2.0;
 
         window
@@ -86,7 +86,7 @@ impl Gui {
         }
     }
 
-    pub fn update(&mut self, conf: &Conf, app_state: &AppState) -> Vec<Action> {
+    pub fn update(&mut self, conf: &Conf, state: &State) -> Vec<Action> {
         for event in self.event_pump.poll_iter() {
             self.platform.handle_event(&mut self.imgui, &event);
 
@@ -109,7 +109,7 @@ impl Gui {
                 imgui::Condition::Once,
             )
             .build(|| {
-                app_state
+                state
                     .timers
                     .iter()
                     .enumerate()
@@ -156,6 +156,8 @@ impl Gui {
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
+
+        // ui.show_demo_window(true);
 
         let draw_data = self.imgui.render();
 

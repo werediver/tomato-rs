@@ -1,9 +1,9 @@
 use crate::{
     action::{Action, TimerId, TimerOp},
-    app_state::AppState,
+    state::State,
 };
 
-pub fn handle_action(action: Action, app_state: &mut AppState) -> Option<Action> {
+pub fn handle_action(action: Action, app_state: &mut State) -> Option<Action> {
     match action {
         Action::TimerAction {
             id: TimerId(idx),

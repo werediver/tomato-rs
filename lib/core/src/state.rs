@@ -1,5 +1,5 @@
 use crate::timer::Timer;
 
-pub struct AppState {
+pub struct State {
     pub timers: Vec<Timer>,
 }
