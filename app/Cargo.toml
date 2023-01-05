@@ -10,6 +10,7 @@ imgui = { git = "https://github.com/imgui-rs/imgui-rs", tag = "v0.9.0" }
 imgui-glow-renderer = { git = "https://github.com/imgui-rs/imgui-rs", tag = "v0.9.0" }
 imgui-sdl2-support = { git = "https://github.com/imgui-rs/imgui-rs", tag = "v0.9.0" }
 sdl2 = "0.34.5"
+eframe = "0.20.1"
 
 core = { path = "../lib/core" }
 conf = { path = "../lib/conf" }
