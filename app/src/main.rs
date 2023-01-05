@@ -4,11 +4,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use conf::Conf;
-use core::{
-    action::{Action, TimerId, TimerOp},
-    state::State,
-    timer, Core,
-};
+use core::{action::Action, state::State, Core};
 
 mod gui_imgui;
 use gui_imgui as gui;

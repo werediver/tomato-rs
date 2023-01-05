@@ -7,7 +7,12 @@
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum Action {
-    TimerAction { id: TimerId, op: TimerOp },
+    TimerAction {
+        id: TimerId,
+        op: TimerOp,
+    },
+    /// Stop the running timers when the time is out.
+    Tick,
     Quit,
 }
 

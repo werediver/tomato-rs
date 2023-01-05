@@ -1,20 +1,29 @@
+use std::time::Instant;
+
 use crate::{
     action::{Action, TimerId, TimerOp},
     state::State,
 };
 
-pub fn handle_action(action: Action, app_state: &mut State) -> Option<Action> {
+pub fn handle_action(action: Action, state: &mut State) -> Option<Action> {
     match action {
         Action::TimerAction {
             id: TimerId(idx),
             op,
         } => {
-            let timer = &mut app_state.timers[idx];
+            let timer = &mut state.timers[idx];
             match op {
-                TimerOp::Start => timer.start(),
-                TimerOp::Pause => timer.pause(),
-                TimerOp::Resume => timer.resume(),
-                TimerOp::Stop => timer.stop(),
+                TimerOp::Start => timer.start(Instant::now()),
+                TimerOp::Pause => timer.pause(Instant::now()),
+                TimerOp::Resume => timer.resume(Instant::now()),
+                TimerOp::Stop => timer.reset(),
+            }
+            None
+        }
+        Action::Tick => {
+            let now = Instant::now();
+            for timer in &mut state.timers {
+                timer.tick(now);
             }
             None
         }
